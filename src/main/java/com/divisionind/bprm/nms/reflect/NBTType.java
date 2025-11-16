@@ -84,28 +84,69 @@ public enum NBTType {
     }
 
     void init(Class cNBTTagCompound) throws NoSuchMethodException {
-        if (!KnownVersion.v1_18_R1.before()) {
-            set = cNBTTagCompound.getMethod("a", String.class, getClassType());
-            String thing = "p";
-            if (Objects.equals(getType(), "Byte")) thing = "f";
-            if (Objects.equals(getType(), "Short")) thing = "g";
-            if (Objects.equals(getType(), "Int")) thing = "h";
-            if (Objects.equals(getType(), "Long")) thing = "i";
-            if (Objects.equals(getType(), "Float")) thing = "j";
-            if (Objects.equals(getType(), "Double")) thing = "k";
-            if (Objects.equals(getType(), "String")) thing = "l";
-            if (Objects.equals(getType(), "ByteArray")) thing = "m";
-            if (Objects.equals(getType(), "IntArray")) thing = "n";
-            if (Objects.equals(getType(), "Boolean")) thing = "q";
-            if (Objects.equals(getType(), "")) thing = "p";
-            get = cNBTTagCompound.getMethod(thing, String.class);
-        } else {
+        if (KnownVersion.v1_18_R1.before()) {
             set = cNBTTagCompound.getMethod(String.format("set%s", getType()), String.class, getClassType());
             get = cNBTTagCompound.getMethod(String.format("get%s", getType()), String.class);
+            return;
         }
+
+        if (!KnownVersion.v1_20_R3.before()) {
+            set = cNBTTagCompound.getMethod(getMojangSetter(), String.class, getClassType());
+            get = cNBTTagCompound.getMethod(getMojangGetter(), String.class);
+            return;
+        }
+
+        set = cNBTTagCompound.getMethod("a", String.class, getClassType());
+        String thing = "p";
+        if (Objects.equals(getType(), "Byte")) thing = "f";
+        if (Objects.equals(getType(), "Short")) thing = "g";
+        if (Objects.equals(getType(), "Int")) thing = "h";
+        if (Objects.equals(getType(), "Long")) thing = "i";
+        if (Objects.equals(getType(), "Float")) thing = "j";
+        if (Objects.equals(getType(), "Double")) thing = "k";
+        if (Objects.equals(getType(), "String")) thing = "l";
+        if (Objects.equals(getType(), "ByteArray")) thing = "m";
+        if (Objects.equals(getType(), "IntArray")) thing = "n";
+        if (Objects.equals(getType(), "Boolean")) thing = "q";
+        if (Objects.equals(getType(), "")) thing = "p";
+        get = cNBTTagCompound.getMethod(thing, String.class);
     }
 
     void setClassType(Class classType) {
         this.classType = classType;
+    }
+
+    private String getMojangSetter() {
+        switch (this) {
+            case LONG: return "putLong";
+            case BOOLEAN: return "putBoolean";
+            case BYTE: return "putByte";
+            case BYTE_ARRAY: return "putByteArray";
+            case DOUBLE: return "putDouble";
+            case FLOAT: return "putFloat";
+            case INT: return "putInt";
+            case INT_ARRAY: return "putIntArray";
+            case SHORT: return "putShort";
+            case STRING: return "putString";
+            case COMPOUND: return "put";
+            default: throw new IllegalStateException("Unsupported type: " + this);
+        }
+    }
+
+    private String getMojangGetter() {
+        switch (this) {
+            case LONG: return "getLong";
+            case BOOLEAN: return "getBoolean";
+            case BYTE: return "getByte";
+            case BYTE_ARRAY: return "getByteArray";
+            case DOUBLE: return "getDouble";
+            case FLOAT: return "getFloat";
+            case INT: return "getInt";
+            case INT_ARRAY: return "getIntArray";
+            case SHORT: return "getShort";
+            case STRING: return "getString";
+            case COMPOUND: return "getCompound";
+            default: throw new IllegalStateException("Unsupported type: " + this);
+        }
     }
 }
