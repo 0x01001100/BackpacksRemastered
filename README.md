@@ -1,6 +1,8 @@
 # BackpacksRemastered <[bukkit.org](https://dev.bukkit.org/projects/backpack-item)>
-[![](https://img.shields.io/travis/divisionind/BackpacksRemastered/master.svg?style=flat-square)](https://travis-ci.org/divisionind/BackpacksRemastered)
-![](https://img.shields.io/github/repo-size/divisionind/BackpacksRemastered.svg?style=flat-square)
+
+
+
+
 ![](https://img.shields.io/badge/license-GPLv3-green.svg?style=flat-square)
 
 ![](https://raw.githubusercontent.com/divisionind/BackpacksRemastered/master/screenshots/logo.png)
