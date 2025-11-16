@@ -35,7 +35,9 @@ import static com.divisionind.bprm.nms.KnownVersion.VERSION;
 
 public class NMS {
     public static final String SERVER = (KnownVersion.v1_18_R1.before() ? "net.minecraft.server." + VERSION + "." : "net.minecraft.server.");
-    public static final String CRAFT = "org.bukkit.craftbukkit." + VERSION + ".";
+    public static final String CRAFT = KnownVersion.hasVersionedCraftPackage()
+            ? "org.bukkit.craftbukkit." + VERSION + "."
+            : "org.bukkit.craftbukkit.";
 
     public static Field TileEntity_world;
     // TODO add NMSField and NMSConstructor managers
@@ -75,11 +77,17 @@ public class NMS {
 
                 TileEntity_world = NMSClass.TileEntity.getClazz().getDeclaredField("world");
                 TileEntity_world.setAccessible(true);
-            } else {
+            } else if (KnownVersion.v1_20_R3.before()) {
                 Field overWorldKeyField = NMSClass.World.getClazz().getDeclaredField("f");
                 DIMENSION_MANAGER_OVERWORLD = overWorldKeyField.get(null);
 
                 TileEntity_world = NMSClass.TileEntity.getClazz().getDeclaredField("n");
+                TileEntity_world.setAccessible(true);
+            } else {
+                Field overWorldKeyField = NMSClass.World.getClazz().getDeclaredField("OVERWORLD");
+                DIMENSION_MANAGER_OVERWORLD = overWorldKeyField.get(null);
+
+                TileEntity_world = NMSClass.TileEntity.getClazz().getDeclaredField("level");
                 TileEntity_world.setAccessible(true);
             }
         } catch (Exception e) {

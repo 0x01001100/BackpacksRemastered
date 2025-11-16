@@ -38,6 +38,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.UUID;
 
@@ -82,16 +83,8 @@ public class BPFurnace extends BackpackHandler {
             NMS.TileEntity_world.set(furnace, worldServer);
 
             if (backpack.hasNBT("furnace_data")) {
-                //furnace.load((NBTTagCompound) backpack.getAsMap("furnace_data").getTagCompound());
                 Object furnaceDataTC = backpack.getAsMap("furnace_data").getTagCompound();
-                if (KnownVersion.v1_16_R1.before()) {
-                    NMSMethod.load.getMethod().invoke(furnace, furnaceDataTC);
-                } else
-                if (KnownVersion.v1_17_R1.before()) {
-                    NMSMethod.load.getMethod().invoke(furnace, null, furnaceDataTC);
-                } else {
-                    NMSMethod.load.getMethod().invoke(furnace, furnaceDataTC); // back to old method, make up your mind
-                }
+                invokeFurnaceLoad(furnace, furnaceDataTC);
             }
 
             UUID furnaceId = UUID.randomUUID();
@@ -144,6 +137,23 @@ public class BPFurnace extends BackpackHandler {
         //furnace.save((NBTTagCompound) nbtMap.getTagCompound());
         NMSMethod.save.getMethod().invoke(furnace, nbtMap.getTagCompound());
         backpack.setAsMap("furnace_data", nbtMap);
+    }
+
+    private static void invokeFurnaceLoad(Object furnace, Object furnaceDataTC)
+            throws InvocationTargetException, IllegalAccessException {
+        Method loadMethod = NMSMethod.load.getMethod();
+        Class<?>[] params = loadMethod.getParameterTypes();
+        Object[] args = new Object[params.length];
+
+        for (int i = 0; i < params.length; i++) {
+            if (params[i].equals(NMSClass.NBTTagCompound.getClazz())) {
+                args[i] = furnaceDataTC;
+            } else {
+                args[i] = null;
+            }
+        }
+
+        loadMethod.invoke(furnace, args);
     }
 
     public static Map.Entry<UUID, VirtualFurnace> locateVirtualFurnace(Object furnace) {

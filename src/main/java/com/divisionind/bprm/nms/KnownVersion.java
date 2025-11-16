@@ -20,6 +20,9 @@ package com.divisionind.bprm.nms;
 
 import org.bukkit.Bukkit;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * A list of known versions. This gives us a history of how one version progressed to the next which
  * is useful for quickly resolving NMS functionality at runtime. It's why we can support so many versions.
@@ -46,23 +49,50 @@ public enum KnownVersion {
     v1_18_R1,
     v1_18_R2,
     v1_19_R1,
+    v1_20_R1,
+    v1_20_R2,
+    v1_20_R3,
+    v1_21_R1,
     ;
 
     private static final KnownVersion KVERSION;
     public static final String VERSION;
+    private static final boolean HAS_VERSIONED_PACKAGE;
+    private static final Pattern CRAFT_VERSION_PATTERN = Pattern.compile("v\\d+_\\d+_R\\d+");
 
     static {
         String vtmp = Bukkit.getServer().getClass().getPackage().getName();
         VERSION = vtmp.substring(vtmp.lastIndexOf('.') + 1);
+        HAS_VERSIONED_PACKAGE = CRAFT_VERSION_PATTERN.matcher(VERSION).matches();
 
-        KnownVersion ktmp;
-        try {
-            ktmp = valueOf(VERSION);
-        } catch (IllegalArgumentException e) {
-            KnownVersion[] versions = values();
-            ktmp = versions[versions.length-1];
+        KnownVersion resolved = resolveByIdentifier(VERSION);
+        if (resolved == null) {
+            resolved = resolveFromBukkitVersion();
         }
-        KVERSION = ktmp;
+        if (resolved == null) {
+            KnownVersion[] versions = values();
+            resolved = versions[versions.length - 1];
+        }
+        KVERSION = resolved;
+    }
+
+    private static KnownVersion resolveFromBukkitVersion() {
+        String bukkitVersion = Bukkit.getBukkitVersion();
+        Matcher matcher = Pattern.compile("(\\d+)\\.(\\d+)").matcher(bukkitVersion);
+        if (!matcher.find()) {
+            return null;
+        }
+
+        String identifier = String.format("v%s_%s_R1", matcher.group(1), matcher.group(2));
+        return resolveByIdentifier(identifier);
+    }
+
+    private static KnownVersion resolveByIdentifier(String identifier) {
+        try {
+            return valueOf(identifier);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 
     /**
@@ -70,5 +100,9 @@ public enum KnownVersion {
      */
     public boolean before() {
         return KVERSION.ordinal() < ordinal();
+    }
+
+    public static boolean hasVersionedCraftPackage() {
+        return HAS_VERSIONED_PACKAGE;
     }
 }
